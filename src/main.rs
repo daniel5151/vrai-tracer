@@ -1,5 +1,7 @@
 use minifb::{Key, Scale, Window, WindowOptions};
 
+pub mod vec3;
+
 const WIDTH: usize = 200;
 const HEIGHT: usize = 100;
 
