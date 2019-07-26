@@ -10,6 +10,17 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
+    #[inline]
+    pub fn new(x: f32, y: f32, z: f32) -> Vec3 {
+        Vec3 { x, y, z }
+    }
+
+    #[inline]
+    pub fn new_unit_vector(mut dir: Vec3) -> Vec3 {
+        dir.make_unit_vector();
+        dir
+    }
+
     /// Returns vector's absolute length
     #[inline]
     pub fn length(&self) -> f32 {
