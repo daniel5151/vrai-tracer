@@ -3,17 +3,7 @@ use std::ops::Range;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 
-trait AsColor {
-    fn as_color(self) -> u32;
-}
-
-impl AsColor for Vec3 {
-    fn as_color(mut self) -> u32 {
-        self = self * 255.99;
-        u32::from_le_bytes([self.z as u8, self.y as u8, self.x as u8, 0])
-    }
-}
-
+/// Container for hit information
 #[derive(Debug, Copy, Clone)]
 pub struct HitRecord {
     /// Position along ray
@@ -24,10 +14,14 @@ pub struct HitRecord {
     pub normal: Vec3,
 }
 
-trait Hitable: std::fmt::Debug {
-    fn hit(&self, r: &Ray, t_range: Range<f32>, rec: &mut HitRecord) -> bool;
+/// Anything that can be Hit by a ray
+pub trait Hitable: std::fmt::Debug {
+    /// Check if object is hit by [[Ray]] `r`.
+    /// Returns None if no hit occurred, or Some(HitRecord) otherwise.
+    fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord>;
 }
 
+/// A Sphere. You know what a Sphere is, right?
 #[derive(Debug)]
 pub struct Sphere {
     pub center: Vec3,
@@ -35,13 +29,14 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    fn new(center: Vec3, radius: f32) -> Sphere {
+    /// Create a new sphere with a specified `center` and `radius`
+    pub fn new(center: Vec3, radius: f32) -> Sphere {
         Sphere { center, radius }
     }
 }
 
 impl Hitable for Sphere {
-    fn hit(&self, r: &Ray, t_range: Range<f32>, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord> {
         let oc = r.origin() - self.center;
         let a = Vec3::dot(&r.direction(), &r.direction());
         let b = 2.0 * Vec3::dot(&oc, &r.direction());
@@ -53,10 +48,10 @@ impl Hitable for Sphere {
                 ($sign:tt) => {
                     let root = (-b $sign discriminant.sqrt()) / (2.0 * a);
                     if t_range.contains(&root) {
-                        rec.t = root;
-                        rec.p = r.point_at_param(rec.t);
-                        rec.normal = (rec.p - self.center) / self.radius;
-                        return true;
+                        let t = root;
+                        let p = r.point_at_param(t);
+                        let normal = (p - self.center) / self.radius;
+                        return Some(HitRecord{ t, p, normal });
                     }
                 };
             }
@@ -64,41 +59,30 @@ impl Hitable for Sphere {
             check_root!(+);
         }
 
-        false
+        None
     }
 }
 
 impl Hitable for Vec<Box<dyn Hitable>> {
-    fn hit(&self, r: &Ray, t_range: Range<f32>, rec: &mut HitRecord) -> bool {
-        // TODO: this be ugly
-        let mut temp_rec = HitRecord {
-            t: 0.0,
-            p: Vec3::new(0., 0., 0.),
-            normal: Vec3::new(1., 0., 0.),
-        };
-        let mut hit_anything = false;
-
+    /// Returns the HitRecord of the closest hitable object
+    fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord> {
+        let mut temp_rec = None;
         let mut closest_so_far = t_range.end;
+
         for hitable in self {
-            if hitable.hit(r, t_range.start..closest_so_far, &mut temp_rec) {
-                hit_anything = true;
-                closest_so_far = temp_rec.t;
-                *rec = temp_rec;
+            if let Some(rec) = hitable.hit(r, t_range.start..closest_so_far) {
+                closest_so_far = rec.t;
+                temp_rec = Some(rec);
             }
         }
-        hit_anything
+
+        temp_rec
     }
 }
 
 fn color(r: &Ray, world: &Vec<Box<dyn Hitable>>) -> Vec3 {
-    // TODO: this be ugly
-    let mut rec = HitRecord {
-        t: 0.0,
-        p: Vec3::new(0., 0., 0.),
-        normal: Vec3::new(1., 0., 0.),
-    };
-
-    if world.hit(r, 0.0..std::f32::MAX, &mut rec) {
+    // Color is based off returned Normal
+    if let Some(rec) = world.hit(r, 0.0..std::f32::MAX) {
         let n = rec.normal;
         return 0.5 * Vec3::new(n.x + 1., n.y + 1., n.z + 1.);
     }
@@ -107,6 +91,17 @@ fn color(r: &Ray, world: &Vec<Box<dyn Hitable>>) -> Vec3 {
     let unit_direction = r.direction().normalize();
     let t = 0.5 * (unit_direction.y + 1.0);
     (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * Vec3::new(0.5, 0.7, 1.0)
+}
+
+trait AsColor {
+    fn as_color(self) -> u32;
+}
+
+impl AsColor for Vec3 {
+    fn as_color(mut self) -> u32 {
+        self = self * 255.99;
+        u32::from_le_bytes([self.z as u8, self.y as u8, self.x as u8, 0])
+    }
 }
 
 pub fn trace_some_rays(buffer: &mut Vec<u32>, width: usize, height: usize) {
