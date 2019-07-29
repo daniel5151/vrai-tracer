@@ -15,7 +15,7 @@ pub struct HitRecord {
 }
 
 /// Anything that can be Hit by a ray
-pub trait Hitable: std::fmt::Debug {
+pub trait Hittable: std::fmt::Debug {
     /// Check if object is hit by [[Ray]] `r`.
     /// Returns None if no hit occurred, or Some(HitRecord) otherwise.
     fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord>;
@@ -35,7 +35,7 @@ impl Sphere {
     }
 }
 
-impl Hitable for Sphere {
+impl Hittable for Sphere {
     fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord> {
         let oc = r.origin() - self.center;
         let a = Vec3::dot(&r.direction(), &r.direction());
@@ -63,14 +63,14 @@ impl Hitable for Sphere {
     }
 }
 
-impl Hitable for Vec<Box<dyn Hitable>> {
-    /// Returns the HitRecord of the closest hitable object
+impl Hittable for Vec<Box<dyn Hittable>> {
+    /// Returns the HitRecord of the closest hittable object
     fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord> {
         let mut temp_rec = None;
         let mut closest_so_far = t_range.end;
 
-        for hitable in self {
-            if let Some(rec) = hitable.hit(r, t_range.start..closest_so_far) {
+        for hittable in self {
+            if let Some(rec) = hittable.hit(r, t_range.start..closest_so_far) {
                 closest_so_far = rec.t;
                 temp_rec = Some(rec);
             }
@@ -80,7 +80,7 @@ impl Hitable for Vec<Box<dyn Hitable>> {
     }
 }
 
-fn color(r: &Ray, world: &Vec<Box<dyn Hitable>>) -> Vec3 {
+fn color(r: &Ray, world: &Vec<Box<dyn Hittable>>) -> Vec3 {
     // Color is based off returned Normal
     if let Some(rec) = world.hit(r, 0.0..std::f32::MAX) {
         let n = rec.normal;
@@ -110,7 +110,7 @@ pub fn trace_some_rays(buffer: &mut Vec<u32>, width: usize, height: usize) {
     let vertical = Vec3::new(0.0, 2.0, 0.0);
     let origin = Vec3::new(0.0, 0.0, 0.0);
 
-    let world: Vec<Box<dyn Hitable>> = vec![
+    let world: Vec<Box<dyn Hittable>> = vec![
         Box::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)),
         Box::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)),
     ];
