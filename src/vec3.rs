@@ -10,15 +10,9 @@ pub struct Vec3 {
 }
 
 impl Vec3 {
-    #[inline]
+    /// Create a new Vec3
     pub fn new(x: f32, y: f32, z: f32) -> Vec3 {
         Vec3 { x, y, z }
-    }
-
-    #[inline]
-    pub fn new_unit_vector(mut dir: Vec3) -> Vec3 {
-        dir.make_unit_vector();
-        dir
     }
 
     /// Returns vector's absolute length
@@ -30,14 +24,16 @@ impl Vec3 {
     /// Returns vector's absolute length squared
     #[inline]
     pub fn squared_length(&self) -> f32 {
+        // fun fact, the compiler is good enough to optimize these powf calls
+        // into simple multiplications: https://godbolt.org/z/mUezdU
         self.x.powf(2.) + self.y.powf(2.) + self.z.powf(2.)
     }
 
-    /// Transforms vector into unit vector
+    /// Returns vector's corresponding unit vector
     #[inline]
-    pub fn make_unit_vector(&mut self) {
+    pub fn normalize(&self) -> Vec3 {
         let k = 1.0 / self.length();
-        *self *= k
+        *self * k
     }
 
     /// Dot product operator

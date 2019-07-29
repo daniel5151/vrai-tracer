@@ -27,7 +27,7 @@ fn color(r: &Ray) -> Vec3 {
         return Vec3::new(1.0, 0.0, 0.0);
     }
 
-    let unit_direction = Vec3::new_unit_vector(r.direction());
+    let unit_direction = Vec3::normalize(&r.direction());
     let t = 0.5 * (unit_direction.y + 1.0);
     (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * Vec3::new(0.5, 0.7, 1.0)
 }
