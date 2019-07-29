@@ -1,5 +1,8 @@
 use std::ops::Range;
 
+use rand::Rng;
+
+use crate::camera::Camera;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 
@@ -105,11 +108,9 @@ impl AsColor for Vec3 {
 }
 
 pub fn trace_some_rays(buffer: &mut Vec<u32>, width: usize, height: usize) {
-    let lower_left_corner = Vec3::new(-2.0, -1.0, -1.0);
-    let horizontal = Vec3::new(4.0, 0.0, 0.0);
-    let vertical = Vec3::new(0.0, 2.0, 0.0);
-    let origin = Vec3::new(0.0, 0.0, 0.0);
+    let mut rng = rand::thread_rng();
 
+    let camera = Camera::new();
     let world: Vec<Box<dyn Hittable>> = vec![
         Box::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)),
         Box::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)),
@@ -120,12 +121,17 @@ pub fn trace_some_rays(buffer: &mut Vec<u32>, width: usize, height: usize) {
             let y = (height - y) as f32;
             let x = x as f32;
 
-            let u = x / width as f32;
-            let v = y / height as f32;
+            const SAMPLES: usize = 10;
+            let avg_color = (0..SAMPLES).fold(Vec3::new(0.0, 0.0, 0.0), |col, _| {
+                let u = (x + rng.gen::<f32>()) / width as f32;
+                let v = (y + rng.gen::<f32>()) / height as f32;
 
-            let r = Ray::new(origin, lower_left_corner + u * horizontal + v * vertical);
+                let r = camera.get_ray(u, v);
 
-            *px = color(&r, &world).as_color();
+                col + color(&r, &world)
+            }) / SAMPLES as f32;
+
+            *px = avg_color.as_color();
         }
     }
 }

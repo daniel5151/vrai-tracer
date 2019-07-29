@@ -1,5 +1,6 @@
 use minifb::{Key, Scale, Window, WindowOptions};
 
+pub mod camera;
 pub mod ray;
 mod render;
 pub mod vec3;
