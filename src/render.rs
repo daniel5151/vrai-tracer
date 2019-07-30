@@ -107,7 +107,9 @@ impl AsColor for Vec3 {
     }
 }
 
-pub fn trace_some_rays(buffer: &mut Vec<u32>, width: usize, height: usize) {
+use std::time::Duration;
+
+pub fn trace_some_rays(buffer: &mut Vec<u32>, width: usize, height: usize, time: Duration) {
     let mut rng = rand::thread_rng();
 
     let camera = Camera::new();
@@ -121,12 +123,14 @@ pub fn trace_some_rays(buffer: &mut Vec<u32>, width: usize, height: usize) {
             let y = (height - y) as f32;
             let x = x as f32;
 
+            let camera_offset = (time.as_millis() as f32 / 1000.).sin() / 3.;
+
             const SAMPLES: usize = 10;
             let avg_color = (0..SAMPLES).fold(Vec3::new(0.0, 0.0, 0.0), |col, _| {
                 let u = (x + rng.gen::<f32>()) / width as f32;
                 let v = (y + rng.gen::<f32>()) / height as f32;
 
-                let r = camera.get_ray(u, v);
+                let r = camera.get_ray(u + camera_offset, v);
 
                 col + color(&r, &world)
             }) / SAMPLES as f32;
