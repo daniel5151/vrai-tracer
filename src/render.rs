@@ -83,11 +83,22 @@ impl Hittable for Vec<Box<dyn Hittable>> {
     }
 }
 
+fn rand_in_unit_sphere() -> Vec3 {
+    let mut rng = rand::thread_rng();
+
+    loop {
+        let p = 2.0 * Vec3::new(rng.gen(), rng.gen(), rng.gen()) - Vec3::new(1., 1., 1.);
+        if p.squared_length() < 1.0 {
+            break p;
+        }
+    }
+}
+
 fn color(r: &Ray, world: &Vec<Box<dyn Hittable>>) -> Vec3 {
     // Color is based off returned Normal
-    if let Some(rec) = world.hit(r, 0.0..std::f32::MAX) {
-        let n = rec.normal;
-        return 0.5 * Vec3::new(n.x + 1., n.y + 1., n.z + 1.);
+    if let Some(rec) = world.hit(r, 0.001..std::f32::MAX) {
+        let target = rec.p + rec.normal + rand_in_unit_sphere();
+        return 0.5 * color(&Ray::new(rec.p, target - rec.p), world);
     }
 
     // Background gradient
@@ -134,6 +145,8 @@ pub fn trace_some_rays(buffer: &mut Vec<u32>, width: usize, height: usize, time:
 
                 col + color(&r, &world)
             }) / SAMPLES as f32;
+
+            let avg_color = Vec3::new(avg_color.x.sqrt(), avg_color.y.sqrt(), avg_color.z.sqrt());
 
             *px = avg_color.as_color();
         }
