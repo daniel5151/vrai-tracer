@@ -4,25 +4,23 @@ use rand::Rng;
 
 use crate::camera::Camera;
 use crate::hittable::{sphere::Sphere, Hittable};
+use crate::material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 
-fn rand_in_unit_sphere() -> Vec3 {
-    let mut rng = rand::thread_rng();
+const MAX_DEPTH: usize = 50;
 
-    loop {
-        let p = 2.0 * Vec3::new(rng.gen(), rng.gen(), rng.gen()) - Vec3::new(1., 1., 1.);
-        if p.squared_length() < 1.0 {
-            break p;
-        }
-    }
-}
-
-fn color(r: &Ray, world: &Vec<Box<dyn Hittable>>) -> Vec3 {
-    // Color is based off returned Normal
+fn color(r: &Ray, world: &Vec<Box<dyn Hittable>>, depth: usize) -> Vec3 {
     if let Some(rec) = world.hit(r, 0.001..std::f32::MAX) {
-        let target = rec.p + rec.normal + rand_in_unit_sphere();
-        return 0.5 * color(&Ray::new(rec.p, target - rec.p), world);
+        if depth >= MAX_DEPTH {
+            return Vec3::new(0.0, 0.0, 0.0);
+        }
+
+        if let Some((attenuation, scattered)) = rec.material.scatter(r, &rec) {
+            return attenuation * color(&scattered, &world, depth + 1);
+        }
+
+        return Vec3::new(0.0, 0.0, 0.0);
     }
 
     // Background gradient
@@ -57,8 +55,26 @@ pub fn trace_some_rays(buffer: &mut Vec<u32>, opts: RenderOpts, time: Duration) 
 
     let camera = Camera::new();
     let world: Vec<Box<dyn Hittable>> = vec![
-        Box::new(Sphere::new(Vec3::new(0.0, 0.0, -1.0), 0.5)),
-        Box::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)),
+        Box::new(Sphere::new(
+            Vec3::new(0.0, 0.0, -1.0),
+            0.5,
+            Box::new(material::Lambertian::new(Vec3::new(0.8, 0.3, 0.3))),
+        )),
+        Box::new(Sphere::new(
+            Vec3::new(0.0, -100.5, -1.0),
+            100.0,
+            Box::new(material::Lambertian::new(Vec3::new(0.8, 0.8, 0.0))),
+        )),
+        Box::new(Sphere::new(
+            Vec3::new(1.0, 0.0, -1.0),
+            0.5,
+            Box::new(material::Metal::new(Vec3::new(0.8, 0.6, 0.2), 1.0)),
+        )),
+        Box::new(Sphere::new(
+            Vec3::new(-1.0, 0.0, -1.0),
+            0.5,
+            Box::new(material::Metal::new(Vec3::new(0.8, 0.8, 0.8), 0.0)),
+        )),
     ];
 
     for (y, row) in buffer.chunks_exact_mut(opts.width).enumerate() {
@@ -74,7 +90,7 @@ pub fn trace_some_rays(buffer: &mut Vec<u32>, opts: RenderOpts, time: Duration) 
 
                 let r = camera.get_ray(u + camera_offset, v);
 
-                col + color(&r, &world)
+                col + color(&r, &world, 0)
             }) / opts.samples as f32;
 
             let avg_color = Vec3::new(avg_color.x.sqrt(), avg_color.y.sqrt(), avg_color.z.sqrt());

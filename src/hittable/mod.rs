@@ -1,24 +1,27 @@
 use std::ops::Range;
 
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 
 pub mod sphere;
 
 /// Container for hit information
-#[derive(Debug, Copy, Clone)]
-pub struct HitRecord {
+#[derive(Debug, Clone)]
+pub struct HitRecord<'m> {
     /// Position along ray
     pub t: f32,
     /// Hit point
     pub p: Vec3,
     /// Hit Normal
     pub normal: Vec3,
+    /// Material
+    pub material: &'m dyn Material,
 }
 
 /// Anything that can be Hit by a ray
 pub trait Hittable: std::fmt::Debug {
-    /// Check if object is hit by [[Ray]] `r`.
+    /// Check if object is hit by [Ray] `r`.
     /// Returns None if no hit occurred, or Some(HitRecord) otherwise.
     fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord>;
 }

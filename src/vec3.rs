@@ -53,6 +53,12 @@ impl Vec3 {
             z: v1.x * v2.y - v1.y * v2.x,
         }
     }
+
+    /// Return vector's reflection through the `n` vector
+    #[inline]
+    pub fn reflect_through(&self, n: &Vec3) -> Vec3 {
+        *self - 2. * self.dot(n) * n
+    }
 }
 
 macro_rules! impl_Op {
@@ -103,8 +109,8 @@ impl_OpAssign!(MulAssign, mul_assign, *);
 impl_OpAssign!(DivAssign, div_assign, /);
 
 macro_rules! impl_f32Op {
-    ($name:ident, $function:ident, $operator:tt) => {
-        impl $name<f32> for Vec3 {
+    ($vec3:ty, $name:ident, $function:ident, $operator:tt) => {
+        impl $name<f32> for $vec3 {
             type Output = Vec3;
 
             #[inline]
@@ -117,11 +123,11 @@ macro_rules! impl_f32Op {
             }
         }
 
-        impl $name<Vec3> for f32 {
+        impl $name<$vec3> for f32 {
             type Output = Vec3;
 
             #[inline]
-            fn $function(self, v: Vec3) -> Vec3 {
+            fn $function(self, v: $vec3) -> Vec3 {
                 Vec3 {
                     x: v.x $operator self,
                     y: v.y $operator self,
@@ -132,8 +138,10 @@ macro_rules! impl_f32Op {
     };
 }
 
-impl_f32Op!(Mul, mul, *);
-impl_f32Op!(Div, div, /);
+impl_f32Op!(Vec3, Mul, mul, *);
+impl_f32Op!(Vec3, Div, div, /);
+impl_f32Op!(&Vec3, Mul, mul, *);
+impl_f32Op!(&Vec3, Div, div, /);
 
 macro_rules! impl_f32OpAssign {
     ($name:ident, $function:ident, $operator:tt) => {
