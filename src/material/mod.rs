@@ -2,9 +2,11 @@ use crate::hittable::HitRecord;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 
+mod dielectric;
 mod lambertian;
 mod metal;
 
+pub use dielectric::Dielectric;
 pub use lambertian::Lambertian;
 pub use metal::Metal;
 

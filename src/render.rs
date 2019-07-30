@@ -58,7 +58,7 @@ pub fn trace_some_rays(buffer: &mut Vec<u32>, opts: RenderOpts, time: Duration) 
         Box::new(Sphere::new(
             Vec3::new(0.0, 0.0, -1.0),
             0.5,
-            Box::new(material::Lambertian::new(Vec3::new(0.8, 0.3, 0.3))),
+            Box::new(material::Lambertian::new(Vec3::new(0.1, 0.2, 0.5))),
         )),
         Box::new(Sphere::new(
             Vec3::new(0.0, -100.5, -1.0),
@@ -68,12 +68,17 @@ pub fn trace_some_rays(buffer: &mut Vec<u32>, opts: RenderOpts, time: Duration) 
         Box::new(Sphere::new(
             Vec3::new(1.0, 0.0, -1.0),
             0.5,
-            Box::new(material::Metal::new(Vec3::new(0.8, 0.6, 0.2), 1.0)),
+            Box::new(material::Metal::new(Vec3::new(0.8, 0.6, 0.2), 0.25)),
         )),
         Box::new(Sphere::new(
             Vec3::new(-1.0, 0.0, -1.0),
             0.5,
-            Box::new(material::Metal::new(Vec3::new(0.8, 0.8, 0.8), 0.0)),
+            Box::new(material::Dielectric::new(1.5)),
+        )),
+        Box::new(Sphere::new(
+            Vec3::new(-1.0, 0.0, -1.0),
+            -0.45,
+            Box::new(material::Dielectric::new(1.5)),
         )),
     ];
 
