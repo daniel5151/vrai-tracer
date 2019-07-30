@@ -3,6 +3,7 @@ use std::time::Duration;
 use minifb::{Key, Scale, Window, WindowOptions};
 
 pub mod camera;
+pub mod hittable;
 pub mod ray;
 mod render;
 pub mod vec3;
