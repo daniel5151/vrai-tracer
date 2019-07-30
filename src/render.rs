@@ -40,9 +40,9 @@ impl Sphere {
 
 impl Hittable for Sphere {
     fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord> {
-        let oc = r.origin() - self.center;
-        let a = Vec3::dot(&r.direction(), &r.direction());
-        let b = 2.0 * Vec3::dot(&oc, &r.direction());
+        let oc = r.origin - self.center;
+        let a = Vec3::dot(&r.direction, &r.direction);
+        let b = 2.0 * Vec3::dot(&oc, &r.direction);
         let c = Vec3::dot(&oc, &oc) - self.radius.powf(2.);
         let discriminant = b.powf(2.) - 4. * a * c;
 
@@ -102,7 +102,7 @@ fn color(r: &Ray, world: &Vec<Box<dyn Hittable>>) -> Vec3 {
     }
 
     // Background gradient
-    let unit_direction = r.direction().normalize();
+    let unit_direction = r.direction.normalize();
     let t = 0.5 * (unit_direction.y + 1.0);
     (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * Vec3::new(0.5, 0.7, 1.0)
 }
@@ -120,7 +120,17 @@ impl AsColor for Vec3 {
 
 use std::time::Duration;
 
-pub fn trace_some_rays(buffer: &mut Vec<u32>, width: usize, height: usize, time: Duration) {
+/// Container for various render options
+pub struct RenderOpts {
+    /// image width
+    pub width: usize,
+    /// image height
+    pub height: usize,
+    /// samples per-pixel
+    pub samples: usize,
+}
+
+pub fn trace_some_rays(buffer: &mut Vec<u32>, opts: RenderOpts, time: Duration) {
     let mut rng = rand::thread_rng();
 
     let camera = Camera::new();
@@ -129,22 +139,21 @@ pub fn trace_some_rays(buffer: &mut Vec<u32>, width: usize, height: usize, time:
         Box::new(Sphere::new(Vec3::new(0.0, -100.5, -1.0), 100.0)),
     ];
 
-    for (y, row) in buffer.chunks_exact_mut(width).enumerate() {
+    for (y, row) in buffer.chunks_exact_mut(opts.width).enumerate() {
         for (x, px) in row.iter_mut().enumerate() {
-            let y = (height - y) as f32;
+            let y = (opts.height - y) as f32;
             let x = x as f32;
 
             let camera_offset = (time.as_millis() as f32 / 1000.).sin() / 3.;
 
-            const SAMPLES: usize = 10;
-            let avg_color = (0..SAMPLES).fold(Vec3::new(0.0, 0.0, 0.0), |col, _| {
-                let u = (x + rng.gen::<f32>()) / width as f32;
-                let v = (y + rng.gen::<f32>()) / height as f32;
+            let avg_color = (0..opts.samples).fold(Vec3::new(0.0, 0.0, 0.0), |col, _| {
+                let u = (x + rng.gen::<f32>()) / opts.width as f32;
+                let v = (y + rng.gen::<f32>()) / opts.height as f32;
 
                 let r = camera.get_ray(u + camera_offset, v);
 
                 col + color(&r, &world)
-            }) / SAMPLES as f32;
+            }) / opts.samples as f32;
 
             let avg_color = Vec3::new(avg_color.x.sqrt(), avg_color.y.sqrt(), avg_color.z.sqrt());
 
