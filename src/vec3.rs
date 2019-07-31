@@ -97,7 +97,7 @@ macro_rules! impl_OpAssign {
         impl $name for Vec3 {
             #[inline]
             fn $function(&mut self, v2: Vec3) {
-                *self = *self * v2;
+                *self = *self $operator v2;
             }
         }
     };
@@ -148,7 +148,7 @@ macro_rules! impl_f32OpAssign {
         impl $name<f32> for Vec3 {
             #[inline]
             fn $function(&mut self, f: f32) {
-                *self = *self * f;
+                *self = *self $operator f;
             }
         }
     };
