@@ -10,14 +10,22 @@ pub struct Camera {
 
 impl Camera {
     /// Returns a new Camera
-    ///
-    /// TODO: parameterize this
-    pub fn new() -> Camera {
+    /// `vfov` is in degrees
+    pub fn new(lookfrom: Vec3, lookat: Vec3, vup: Vec3, vfov: f32, aspect: f32) -> Camera {
+        let theta = vfov * std::f32::consts::PI / 180.;
+        let half_height = f32::tan(theta / 2.);
+        let half_width = aspect * half_height;
+
+        let origin = lookfrom;
+        let w = (lookfrom - lookat).normalize();
+        let u = vup.cross(&w).normalize();
+        let v = w.cross(&u);
+
         Camera {
-            lower_left_corner: Vec3::new(-2.0, -1.0, -1.0),
-            horizontal: Vec3::new(4.0, 0.0, 0.0),
-            vertical: Vec3::new(0.0, 2.0, 0.0),
-            origin: Vec3::new(0.0, 0.0, 0.0),
+            lower_left_corner: origin - half_width * u - half_height * v - w,
+            horizontal: 2. * half_width * u,
+            vertical: 2. * half_height * v,
+            origin,
         }
     }
 
@@ -26,7 +34,7 @@ impl Camera {
     pub fn get_ray(&self, u: f32, v: f32) -> Ray {
         Ray::new(
             self.origin,
-            self.lower_left_corner + u * self.horizontal + v * self.vertical,
+            self.lower_left_corner + u * self.horizontal + v * self.vertical - self.origin,
         )
     }
 }

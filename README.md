@@ -11,3 +11,5 @@ Update: whoops, spent a day and got through a bunch of chapters during exam seas
 Hit `Space` to start some basic camera movement.
 
 Hold `F` to freeze the current scene in place.
+
+`-` and `=` change the FOV.

@@ -10,6 +10,9 @@ mod render;
 pub mod util;
 pub mod vec3;
 
+use camera::Camera;
+use vec3::Vec3;
+
 const BASE_WIDTH: usize = 256;
 const BASE_HEIGHT: usize = 128;
 const DEFAULT_SAMPLES: usize = 4; // speedy, but grainy
@@ -45,6 +48,8 @@ impl SmoothAvg {
 struct Opts {
     movement: bool,
     freeze: bool,
+    fov: f32,
+    samples: usize,
 }
 
 fn main() -> Result<(), minifb::Error> {
@@ -74,6 +79,8 @@ fn main() -> Result<(), minifb::Error> {
     let mut opts = Opts {
         movement: false,
         freeze: false,
+        fov: 45.0,
+        samples,
     };
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
@@ -93,13 +100,23 @@ fn main() -> Result<(), minifb::Error> {
             Duration::new(0, 0)
         };
 
+        // create the camera
+        let camera = Camera::new(
+            Vec3::new(-2.0, 2., 1.),
+            Vec3::new(0., 0., -1.),
+            Vec3::new(0., 1., 0.),
+            opts.fov,
+            width as f32 / height as f32,
+        );
+
         if !opts.freeze {
             render::trace_some_rays(
                 &mut buffer,
                 render::RenderOpts {
                     width,
                     height,
-                    samples,
+                    camera,
+                    samples: opts.samples,
                 },
                 time,
             );
@@ -117,19 +134,20 @@ fn main() -> Result<(), minifb::Error> {
         window.set_title(format!("{} - {:.2} fups", TITLE, fups.get()).as_str());
 
         // Check for various live options
-
-        window.get_keys_pressed(minifb::KeyRepeat::No).map(|keys| {
+        window.get_keys_pressed(minifb::KeyRepeat::Yes).map(|keys| {
             for key in keys {
                 match key {
                     Key::Space => {
                         opts.movement = !opts.movement;
                         fups = SmoothAvg::new();
                     }
-                    _ => {}
+                    Key::Minus => opts.fov -= 1.0,
+                    Key::Equal => opts.fov += 1.0,
+                    e => eprintln!("{:?}", e),
+                    // _ => {}
                 }
             }
         });
-
         window.get_keys().map(|keys| {
             let mut freeze = false;
             for key in keys {

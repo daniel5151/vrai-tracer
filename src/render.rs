@@ -46,6 +46,8 @@ pub struct RenderOpts {
     pub width: usize,
     /// image height
     pub height: usize,
+    /// camera
+    pub camera: Camera,
     /// samples per-pixel
     pub samples: usize,
 }
@@ -53,7 +55,20 @@ pub struct RenderOpts {
 pub fn trace_some_rays(buffer: &mut Vec<u32>, opts: RenderOpts, time: Duration) {
     let mut rng = rand::thread_rng();
 
-    let camera = Camera::new();
+    // let r = f32::cos(std::f32::consts::PI / 4.);
+    // let world: Vec<Box<dyn Hittable>> = vec![
+    //     Box::new(Sphere::new(
+    //         Vec3::new(-r, 0., -1.),
+    //         r,
+    //         Box::new(material::Lambertian::new(Vec3::new(0.0, 0.0, 1.0))),
+    //     )),
+    //     Box::new(Sphere::new(
+    //         Vec3::new(r, 0., -1.),
+    //         r,
+    //         Box::new(material::Lambertian::new(Vec3::new(1.0, 0.0, 0.0))),
+    //     )),
+    // ];
+
     let world: Vec<Box<dyn Hittable>> = vec![
         Box::new(Sphere::new(
             Vec3::new(0.0, 0.0, -1.0),
@@ -93,7 +108,7 @@ pub fn trace_some_rays(buffer: &mut Vec<u32>, opts: RenderOpts, time: Duration) 
                 let u = (x + rng.gen::<f32>()) / opts.width as f32;
                 let v = (y + rng.gen::<f32>()) / opts.height as f32;
 
-                let r = camera.get_ray(u + camera_offset, v);
+                let r = opts.camera.get_ray(u + camera_offset, v);
 
                 col + color(&r, &world, 0)
             }) / opts.samples as f32;
