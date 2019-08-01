@@ -1,16 +1,13 @@
-use std::time::Duration;
-
 use rand::Rng;
 
 use crate::camera::Camera;
-use crate::hittable::{sphere::Sphere, Hittable};
-use crate::material;
+use crate::hittable::Hittable;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 
 const MAX_DEPTH: usize = 50;
 
-fn color(r: &Ray, world: &Vec<Box<dyn Hittable>>, depth: usize) -> Vec3 {
+fn color(r: &Ray, world: &[&dyn Hittable], depth: usize) -> Vec3 {
     if let Some(rec) = world.hit(r, 0.001..std::f32::MAX) {
         if depth >= MAX_DEPTH {
             return Vec3::new(0.0, 0.0, 0.0);
@@ -46,69 +43,29 @@ pub struct RenderOpts {
     pub width: usize,
     /// image height
     pub height: usize,
-    /// camera
-    pub camera: Camera,
     /// samples per-pixel
     pub samples: usize,
 }
 
-pub fn trace_some_rays(buffer: &mut Vec<u32>, opts: RenderOpts, time: Duration) {
+/// Main raytracer render method
+pub fn trace_some_rays(
+    buffer: &mut Vec<u32>,
+    world: &[&dyn Hittable],
+    camera: Camera,
+    opts: RenderOpts,
+) {
     let mut rng = rand::thread_rng();
-
-    // let r = f32::cos(std::f32::consts::PI / 4.);
-    // let world: Vec<Box<dyn Hittable>> = vec![
-    //     Box::new(Sphere::new(
-    //         Vec3::new(-r, 0., -1.),
-    //         r,
-    //         Box::new(material::Lambertian::new(Vec3::new(0.0, 0.0, 1.0))),
-    //     )),
-    //     Box::new(Sphere::new(
-    //         Vec3::new(r, 0., -1.),
-    //         r,
-    //         Box::new(material::Lambertian::new(Vec3::new(1.0, 0.0, 0.0))),
-    //     )),
-    // ];
-
-    let world: Vec<Box<dyn Hittable>> = vec![
-        Box::new(Sphere::new(
-            Vec3::new(0.0, 0.0, -1.0),
-            0.5,
-            Box::new(material::Lambertian::new(Vec3::new(0.1, 0.2, 0.5))),
-        )),
-        Box::new(Sphere::new(
-            Vec3::new(0.0, -100.5, -1.0),
-            100.0,
-            Box::new(material::Lambertian::new(Vec3::new(0.8, 0.8, 0.0))),
-        )),
-        Box::new(Sphere::new(
-            Vec3::new(1.0, 0.0, -1.0),
-            0.5,
-            Box::new(material::Metal::new(Vec3::new(0.8, 0.6, 0.2), 0.25)),
-        )),
-        Box::new(Sphere::new(
-            Vec3::new(-1.0, 0.0, -1.0),
-            0.5,
-            Box::new(material::Dielectric::new(1.5)),
-        )),
-        Box::new(Sphere::new(
-            Vec3::new(-1.0, 0.0, -1.0),
-            -0.45,
-            Box::new(material::Dielectric::new(1.5)),
-        )),
-    ];
 
     for (y, row) in buffer.chunks_exact_mut(opts.width).enumerate() {
         for (x, px) in row.iter_mut().enumerate() {
             let y = (opts.height - y) as f32;
             let x = x as f32;
 
-            let camera_offset = (time.as_millis() as f32 / 1000.).sin() / 3.;
-
             let avg_color = (0..opts.samples).fold(Vec3::new(0.0, 0.0, 0.0), |col, _| {
                 let u = (x + rng.gen::<f32>()) / opts.width as f32;
                 let v = (y + rng.gen::<f32>()) / opts.height as f32;
 
-                let r = opts.camera.get_ray(u + camera_offset, v);
+                let r = camera.get_ray(u, v);
 
                 col + color(&r, &world, 0)
             }) / opts.samples as f32;

@@ -10,14 +10,15 @@ pub struct Camera {
 
 impl Camera {
     /// Returns a new Camera
-    /// `vfov` is in degrees
-    pub fn new(lookfrom: Vec3, lookat: Vec3, vup: Vec3, vfov: f32, aspect: f32) -> Camera {
-        let theta = vfov * std::f32::consts::PI / 180.;
-        let half_height = f32::tan(theta / 2.);
-        let half_width = aspect * half_height;
+    ///
+    /// `hfov` is in degrees
+    /// `aspect` is width:height ratio
+    pub fn new(origin: Vec3, direction: Vec3, vup: Vec3, hfov: f32, aspect: f32) -> Camera {
+        let theta = hfov * std::f32::consts::PI / 180.;
+        let half_width = f32::tan(theta / 2.);
+        let half_height = half_width / aspect;
 
-        let origin = lookfrom;
-        let w = (lookfrom - lookat).normalize();
+        let w = direction.normalize();
         let u = vup.cross(&w).normalize();
         let v = w.cross(&u);
 

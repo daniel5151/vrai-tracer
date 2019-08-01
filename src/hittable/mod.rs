@@ -6,6 +6,8 @@ use crate::vec3::Vec3;
 
 pub mod sphere;
 
+pub use sphere::Sphere;
+
 /// Container for hit information
 #[derive(Debug, Clone)]
 pub struct HitRecord<'m> {
@@ -26,13 +28,13 @@ pub trait Hittable: std::fmt::Debug {
     fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord>;
 }
 
-impl Hittable for Vec<Box<dyn Hittable>> {
+impl Hittable for &[&dyn Hittable] {
     /// Returns the HitRecord of the closest hittable object
     fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord> {
         let mut temp_rec = None;
         let mut closest_so_far = t_range.end;
 
-        for hittable in self {
+        for hittable in self.iter() {
             if let Some(rec) = hittable.hit(r, t_range.start..closest_so_far) {
                 closest_so_far = rec.t;
                 temp_rec = Some(rec);

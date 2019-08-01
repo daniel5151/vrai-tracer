@@ -11,6 +11,7 @@ pub mod util;
 pub mod vec3;
 
 use camera::Camera;
+use hittable::{Hittable, Sphere};
 use vec3::Vec3;
 
 const BASE_WIDTH: usize = 256;
@@ -45,11 +46,14 @@ impl SmoothAvg {
     }
 }
 
+#[derive(Debug)]
 struct Opts {
     movement: bool,
     freeze: bool,
     fov: f32,
     samples: usize,
+    camera_origin: Vec3,
+    camera_direction: Vec3,
 }
 
 fn main() -> Result<(), minifb::Error> {
@@ -81,7 +85,43 @@ fn main() -> Result<(), minifb::Error> {
         freeze: false,
         fov: 45.0,
         samples,
+        camera_direction: (Vec3::new(-2.0, 2., 1.) - Vec3::new(0., 0., -1.)).normalize(),
+        camera_origin: Vec3::new(-2.0, 2., 1.),
     };
+
+    // setup the world
+    let spheres = vec![
+        Box::new(Sphere::new(
+            Vec3::new(0.0, 0.0, -1.0),
+            0.5,
+            Box::new(material::Lambertian::new(Vec3::new(0.1, 0.2, 0.5))),
+        )),
+        Box::new(Sphere::new(
+            Vec3::new(0.0, -100.5, -1.0),
+            100.0,
+            Box::new(material::Lambertian::new(Vec3::new(0.8, 0.8, 0.0))),
+        )),
+        Box::new(Sphere::new(
+            Vec3::new(1.0, 0.0, -1.0),
+            0.5,
+            Box::new(material::Metal::new(Vec3::new(0.8, 0.6, 0.2), 0.25)),
+        )),
+        Box::new(Sphere::new(
+            Vec3::new(-1.0, 0.0, -1.0),
+            0.5,
+            Box::new(material::Dielectric::new(1.5)),
+        )),
+        Box::new(Sphere::new(
+            Vec3::new(-1.0, 0.0, -1.0),
+            -0.45,
+            Box::new(material::Dielectric::new(1.5)),
+        )),
+    ];
+
+    let world: Vec<&dyn Hittable> = spheres
+        .iter()
+        .map(|x| x.as_ref() as &dyn Hittable)
+        .collect();
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         // Update buffer size if window size changes
@@ -91,9 +131,8 @@ fn main() -> Result<(), minifb::Error> {
             buffer.resize(width * height, 0);
         }
 
-        // "movement" in the sense that the render function gets passed the time
-        // since movement began
-        let time = if opts.movement {
+        // TODO: actually animate something with time?
+        let _time = if opts.movement {
             init_time.elapsed()
         } else {
             init_time = std::time::Instant::now();
@@ -102,8 +141,8 @@ fn main() -> Result<(), minifb::Error> {
 
         // create the camera
         let camera = Camera::new(
-            Vec3::new(-2.0, 2., 1.),
-            Vec3::new(0., 0., -1.),
+            opts.camera_origin,
+            opts.camera_direction,
             Vec3::new(0., 1., 0.),
             opts.fov,
             width as f32 / height as f32,
@@ -112,13 +151,13 @@ fn main() -> Result<(), minifb::Error> {
         if !opts.freeze {
             render::trace_some_rays(
                 &mut buffer,
+                &world,
+                camera,
                 render::RenderOpts {
                     width,
                     height,
-                    camera,
                     samples: opts.samples,
                 },
-                time,
             );
         } else {
             // do some busywork to avoid breaking the fups counter
@@ -136,27 +175,34 @@ fn main() -> Result<(), minifb::Error> {
         // Check for various live options
         window.get_keys_pressed(minifb::KeyRepeat::Yes).map(|keys| {
             for key in keys {
+                let mut opts_updated = true;
                 match key {
                     Key::Space => {
                         opts.movement = !opts.movement;
                         fups = SmoothAvg::new();
                     }
+                    Key::W => opts.camera_origin -= opts.camera_direction * 0.1,
+                    Key::S => opts.camera_origin += opts.camera_direction * 0.1,
                     Key::Minus => opts.fov -= 1.0,
                     Key::Equal => opts.fov += 1.0,
-                    e => eprintln!("{:?}", e),
-                    // _ => {}
+                    Key::Period => opts.samples += 1,
+                    Key::Comma => opts.samples -= 1,
+                    // e => eprintln!("{:?}", e),
+                    _ => opts_updated = false,
+                }
+                if opts_updated {
+                    println!("{:#?}", opts);
                 }
             }
         });
         window.get_keys().map(|keys| {
-            let mut freeze = false;
+            opts.freeze = false;
             for key in keys {
                 match key {
-                    Key::F => freeze = true,
+                    Key::F => opts.freeze = true,
                     _ => {}
                 }
             }
-            opts.freeze = freeze;
         });
     }
 
