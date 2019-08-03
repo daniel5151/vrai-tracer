@@ -7,7 +7,7 @@ use crate::vec3::Vec3;
 
 const MAX_DEPTH: usize = 50;
 
-fn color(r: &Ray, world: &[&dyn Hittable], depth: usize) -> Vec3 {
+fn color(r: &Ray, world: &[impl Hittable], depth: usize) -> Vec3 {
     if let Some(rec) = world.hit(r, 0.001..std::f32::MAX) {
         if depth >= MAX_DEPTH {
             return Vec3::new(0.0, 0.0, 0.0);
@@ -50,7 +50,7 @@ pub struct RenderOpts {
 /// Main raytracer render method
 pub fn trace_some_rays(
     buffer: &mut Vec<u32>,
-    world: &[&dyn Hittable],
+    world: &[impl Hittable],
     camera: Camera,
     opts: RenderOpts,
 ) {

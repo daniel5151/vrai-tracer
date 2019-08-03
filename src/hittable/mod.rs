@@ -4,8 +4,10 @@ use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 
-pub mod sphere;
+mod dummy;
+mod sphere;
 
+pub use dummy::Dummy;
 pub use sphere::Sphere;
 
 /// Container for hit information
@@ -28,7 +30,19 @@ pub trait Hittable {
     fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord>;
 }
 
-impl Hittable for &[&dyn Hittable] {
+impl Hittable for &dyn Hittable {
+    fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord> {
+        (**self).hit(r, t_range)
+    }
+}
+
+impl Hittable for &mut dyn Hittable {
+    fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord> {
+        (**self).hit(r, t_range)
+    }
+}
+
+impl<T: Hittable> Hittable for &[T] {
     /// Returns the HitRecord of the closest hittable object
     fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord> {
         let mut temp_rec = None;

@@ -143,14 +143,27 @@ fn main() -> Result<(), minifb::Error> {
             s.center.x = (time.as_millis() as f32 / 1000.).sin();
         });
 
-        // TODO: a safe way to cache the &dyn Hittable references instead of
+        // TODO: a safe way to cache the dyn Hittable refs instead of always
         // rebuilding the world vector each iteration?
         // Alternatively, push this out of the loop, and figure out a safe way
         // to downcast &mut dyn Hittables?
+        //
+        // e.g: this is wildly unsafe lol:
+        // ```
+        // world.get_mut(0).map(|s| {
+        //     // works because of TraitObject struct layout, and because I
+        //     // _know_ that the dyn Hittable at index 0 is indeed a Sphere...
+        //     let s = unsafe { &mut *(*s as *mut dyn Hittable as *mut Sphere) };
+        //     s.center.x = (time.as_millis() as f32 / 1000.).sin();
+        // });
+        // ```
         let world = spheres
             .iter_mut()
-            .map(|x| x as &dyn Hittable)
+            .map(|x| x as &mut dyn Hittable)
             .collect::<Vec<_>>();
+
+        // Alternatively, monomorphize render on Vec<Sphere>...
+        // let world = &spheres;
 
         // create the camera
         let camera = Camera::new(
