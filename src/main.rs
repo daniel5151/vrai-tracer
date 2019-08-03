@@ -90,38 +90,38 @@ fn main() -> Result<(), minifb::Error> {
     };
 
     // setup the world
-    let spheres = vec![
-        Box::new(Sphere::new(
+    let mut spheres = vec![
+        Sphere::new(
+            Vec3::new(0.0, 0.0, -2.0),
+            0.25,
+            Box::new(material::Lambertian::new(Vec3::new(1., 0., 0.))),
+        ),
+        Sphere::new(
             Vec3::new(0.0, 0.0, -1.0),
             0.5,
             Box::new(material::Lambertian::new(Vec3::new(0.1, 0.2, 0.5))),
-        )),
-        Box::new(Sphere::new(
+        ),
+        Sphere::new(
             Vec3::new(0.0, -100.5, -1.0),
             100.0,
             Box::new(material::Lambertian::new(Vec3::new(0.8, 0.8, 0.0))),
-        )),
-        Box::new(Sphere::new(
+        ),
+        Sphere::new(
             Vec3::new(1.0, 0.0, -1.0),
             0.5,
             Box::new(material::Metal::new(Vec3::new(0.8, 0.6, 0.2), 0.25)),
-        )),
-        Box::new(Sphere::new(
+        ),
+        Sphere::new(
             Vec3::new(-1.0, 0.0, -1.0),
             0.5,
             Box::new(material::Dielectric::new(1.5)),
-        )),
-        Box::new(Sphere::new(
+        ),
+        Sphere::new(
             Vec3::new(-1.0, 0.0, -1.0),
             -0.45,
             Box::new(material::Dielectric::new(1.5)),
-        )),
+        ),
     ];
-
-    let world: Vec<&dyn Hittable> = spheres
-        .iter()
-        .map(|x| x.as_ref() as &dyn Hittable)
-        .collect();
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         // Update buffer size if window size changes
@@ -131,13 +131,26 @@ fn main() -> Result<(), minifb::Error> {
             buffer.resize(width * height, 0);
         }
 
-        // TODO: actually animate something with time?
-        let _time = if opts.movement {
+        let time = if opts.movement {
             init_time.elapsed()
         } else {
             init_time = std::time::Instant::now();
             Duration::new(0, 0)
         };
+
+        // little test animation
+        spheres.get_mut(0).map(|s| {
+            s.center.x = (time.as_millis() as f32 / 1000.).sin();
+        });
+
+        // TODO: a safe way to cache the &dyn Hittable references instead of
+        // rebuilding the world vector each iteration?
+        // Alternatively, push this out of the loop, and figure out a safe way
+        // to downcast &mut dyn Hittables?
+        let world = spheres
+            .iter_mut()
+            .map(|x| x as &dyn Hittable)
+            .collect::<Vec<_>>();
 
         // create the camera
         let camera = Camera::new(

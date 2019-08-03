@@ -22,7 +22,7 @@ pub struct HitRecord<'m> {
 }
 
 /// Anything that can be Hit by a ray
-pub trait Hittable: std::fmt::Debug {
+pub trait Hittable {
     /// Check if object is hit by [Ray] `r`.
     /// Returns None if no hit occurred, or Some(HitRecord) otherwise.
     fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord>;
