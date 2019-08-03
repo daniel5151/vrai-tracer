@@ -10,7 +10,7 @@ mod render;
 pub mod util;
 pub mod vec3;
 
-use camera::Camera;
+use camera::{Camera, CameraOpts};
 use hittable::{Hittable, Sphere};
 use vec3::Vec3;
 
@@ -54,6 +54,7 @@ struct Opts {
     samples: usize,
     camera_origin: Vec3,
     camera_direction: Vec3,
+    focus_dist: f32,
 }
 
 fn main() -> Result<(), minifb::Error> {
@@ -80,13 +81,17 @@ fn main() -> Result<(), minifb::Error> {
     let mut last_frame = init_time;
     let mut fups = SmoothAvg::new();
 
+    let look_from = Vec3::new(3.0, 3., 2.);
+    let look_at = Vec3::new(0., 0., -1.);
+
     let mut opts = Opts {
         movement: false,
         freeze: false,
         fov: 45.0,
         samples,
-        camera_direction: (Vec3::new(-2.0, 2., 1.) - Vec3::new(0., 0., -1.)).normalize(),
-        camera_origin: Vec3::new(-2.0, 2., 1.),
+        camera_direction: (look_from - look_at).normalize(),
+        camera_origin: look_from,
+        focus_dist: (look_from - look_at).length(),
     };
 
     // setup the world
@@ -166,13 +171,15 @@ fn main() -> Result<(), minifb::Error> {
         // let world = &spheres;
 
         // create the camera
-        let camera = Camera::new(
-            opts.camera_origin,
-            opts.camera_direction,
-            Vec3::new(0., 1., 0.),
-            opts.fov,
-            width as f32 / height as f32,
-        );
+        let camera = Camera::new(CameraOpts {
+            origin: opts.camera_origin,
+            direction: opts.camera_direction,
+            vup: Vec3::new(0., 1., 0.),
+            hfov: opts.fov,
+            aspect: width as f32 / height as f32,
+            aperture: 2.0,
+            focus_dist: opts.focus_dist,
+        });
 
         if !opts.freeze {
             render::trace_some_rays(
