@@ -7,12 +7,13 @@ pub mod hittable;
 pub mod material;
 pub mod ray;
 mod render;
+pub mod scenes;
 pub mod util;
 pub mod vec3;
 
 use camera::{Camera, CameraOpts};
-use hittable::{Hittable, Sphere};
-use vec3::Vec3;
+use hittable::Hittable;
+use scenes::Scene;
 
 const BASE_WIDTH: usize = 256;
 const BASE_HEIGHT: usize = 128;
@@ -50,11 +51,8 @@ impl SmoothAvg {
 struct Opts {
     movement: bool,
     freeze: bool,
-    fov: f32,
     samples: usize,
-    camera_origin: Vec3,
-    camera_direction: Vec3,
-    focus_dist: f32,
+    cam: CameraOpts,
 }
 
 fn main() -> Result<(), minifb::Error> {
@@ -81,52 +79,17 @@ fn main() -> Result<(), minifb::Error> {
     let mut last_frame = init_time;
     let mut fups = SmoothAvg::new();
 
-    let look_from = Vec3::new(3.0, 3., 2.);
-    let look_at = Vec3::new(0., 0., -1.);
+    // setup the world
+    let mut scene = scenes::Random::new();
+    // let mut scene = scenes::Chapter::new();
 
+    // various live-controllable
     let mut opts = Opts {
         movement: false,
         freeze: false,
-        fov: 45.0,
         samples,
-        camera_direction: (look_from - look_at).normalize(),
-        camera_origin: look_from,
-        focus_dist: (look_from - look_at).length(),
+        cam: scene.init_camopts(),
     };
-
-    // setup the world
-    let mut spheres = vec![
-        Sphere::new(
-            Vec3::new(0.0, 0.0, -2.0),
-            0.25,
-            Box::new(material::Lambertian::new(Vec3::new(1., 0., 0.))),
-        ),
-        Sphere::new(
-            Vec3::new(0.0, 0.0, -1.0),
-            0.5,
-            Box::new(material::Lambertian::new(Vec3::new(0.1, 0.2, 0.5))),
-        ),
-        Sphere::new(
-            Vec3::new(0.0, -100.5, -1.0),
-            100.0,
-            Box::new(material::Lambertian::new(Vec3::new(0.8, 0.8, 0.0))),
-        ),
-        Sphere::new(
-            Vec3::new(1.0, 0.0, -1.0),
-            0.5,
-            Box::new(material::Metal::new(Vec3::new(0.8, 0.6, 0.2), 0.25)),
-        ),
-        Sphere::new(
-            Vec3::new(-1.0, 0.0, -1.0),
-            0.5,
-            Box::new(material::Dielectric::new(1.5)),
-        ),
-        Sphere::new(
-            Vec3::new(-1.0, 0.0, -1.0),
-            -0.45,
-            Box::new(material::Dielectric::new(1.5)),
-        ),
-    ];
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         // Update buffer size if window size changes
@@ -136,6 +99,9 @@ fn main() -> Result<(), minifb::Error> {
             buffer.resize(width * height, 0);
         }
 
+        // update camera aperture
+        opts.cam.aspect = width as f32 / height as f32;
+
         let time = if opts.movement {
             init_time.elapsed()
         } else {
@@ -143,10 +109,8 @@ fn main() -> Result<(), minifb::Error> {
             Duration::new(0, 0)
         };
 
-        // little test animation
-        spheres.get_mut(0).map(|s| {
-            s.center.x = (time.as_millis() as f32 / 1000.).sin();
-        });
+        // offer the scene a change to update itself
+        scene.animate(time);
 
         // TODO: a safe way to cache the dyn Hittable refs instead of always
         // rebuilding the world vector each iteration?
@@ -162,24 +126,17 @@ fn main() -> Result<(), minifb::Error> {
         //     s.center.x = (time.as_millis() as f32 / 1000.).sin();
         // });
         // ```
-        let world = spheres
-            .iter_mut()
-            .map(|x| x as &mut dyn Hittable)
+        let world = scene
+            .get_world()
+            .iter()
+            .map(|x| x as &dyn Hittable)
             .collect::<Vec<_>>();
 
         // Alternatively, monomorphize render on Vec<Sphere>...
-        // let world = &spheres;
+        // let world = &scene.get_world();
 
         // create the camera
-        let camera = Camera::new(CameraOpts {
-            origin: opts.camera_origin,
-            direction: opts.camera_direction,
-            vup: Vec3::new(0., 1., 0.),
-            hfov: opts.fov,
-            aspect: width as f32 / height as f32,
-            aperture: 2.0,
-            focus_dist: opts.focus_dist,
-        });
+        let camera = Camera::new(opts.cam);
 
         if !opts.freeze {
             render::trace_some_rays(
@@ -214,10 +171,10 @@ fn main() -> Result<(), minifb::Error> {
                         opts.movement = !opts.movement;
                         fups = SmoothAvg::new();
                     }
-                    Key::W => opts.camera_origin -= opts.camera_direction * 0.1,
-                    Key::S => opts.camera_origin += opts.camera_direction * 0.1,
-                    Key::Minus => opts.fov -= 1.0,
-                    Key::Equal => opts.fov += 1.0,
+                    Key::W => opts.cam.origin -= opts.cam.direction * 0.1,
+                    Key::S => opts.cam.origin += opts.cam.direction * 0.1,
+                    Key::Minus => opts.cam.hfov -= 1.0,
+                    Key::Equal => opts.cam.hfov += 1.0,
                     Key::Period => opts.samples += 1,
                     Key::Comma => opts.samples -= 1,
                     // e => eprintln!("{:?}", e),

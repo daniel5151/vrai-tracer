@@ -3,6 +3,7 @@ use crate::util::rand_in_unit_circle;
 use crate::vec3::Vec3;
 
 /// Camera Construction parameters
+#[derive(Debug, Copy, Clone)]
 pub struct CameraOpts {
     pub origin: Vec3,
     pub direction: Vec3,
@@ -15,6 +16,7 @@ pub struct CameraOpts {
     pub focus_dist: f32,
 }
 
+#[derive(Debug)]
 pub struct Camera {
     lower_left_corner: Vec3,
     horizontal: Vec3,
