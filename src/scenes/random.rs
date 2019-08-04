@@ -77,17 +77,17 @@ impl Random {
 
 impl Scene<Sphere> for Random {
     fn init_camopts(&self) -> CameraOpts {
-        let look_from = Vec3::new(10., 2.0, 3.);
-        let look_at = Vec3::new(-5., -1.0, 0.);
+        let look_from = Vec3::new(13.0, 2.0, 3.0);
+        let look_at = Vec3::new(0.0, 0.0, 0.0);
 
         CameraOpts {
             origin: look_from,
             direction: (look_from - look_at).normalize(),
             vup: Vec3::new(0., 1., 0.),
-            hfov: 45.0,
+            hfov: 40.0,
             aspect: 9999., // dummy value, should depend on output medium
-            aperture: 0.,
-            focus_dist: (look_from - look_at).length(),
+            aperture: 0.25,
+            focus_dist: 10.,
         }
     }
 
