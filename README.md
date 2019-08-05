@@ -11,6 +11,14 @@ for larger scenes, the framerate will really tank).
 
 I'll probably add static image output at some point as well.
 
+## Usage
+
+```
+cargo run --release [samples] [resolution]
+```
+
+resolution is formatted as: `WxH` (e.g: `640x480`)
+
 ## Controls
 
 Changing the scene requires modifying the code at the moment. I hope to replace

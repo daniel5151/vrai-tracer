@@ -62,10 +62,21 @@ fn main() -> Result<(), minifb::Error> {
         None => DEFAULT_SAMPLES,
     };
 
+    let (base_width, base_height) = match args.get(2) {
+        Some(s) => {
+            let res = s
+                .split("x")
+                .map(|s| s.parse::<usize>().expect("bad resolution"))
+                .collect::<Vec<_>>();
+            (res[0], res[1])
+        }
+        None => (BASE_WIDTH, BASE_HEIGHT),
+    };
+
     let mut window = Window::new(
         TITLE,
-        BASE_WIDTH,
-        BASE_HEIGHT,
+        base_width,
+        base_height,
         WindowOptions {
             scale: Scale::X2,
             resize: true,
@@ -141,7 +152,7 @@ fn main() -> Result<(), minifb::Error> {
         if !opts.freeze {
             render::trace_some_rays(
                 &mut buffer,
-                &world,
+                &world.as_slice(),
                 camera,
                 render::RenderOpts {
                     width,

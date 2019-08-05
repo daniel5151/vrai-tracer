@@ -8,14 +8,14 @@ use crate::vec3::Vec3;
 
 const MAX_DEPTH: usize = 50;
 
-fn color(r: &Ray, world: &[impl Hittable], depth: usize) -> Vec3 {
+fn color(r: &Ray, world: &impl Hittable, depth: usize) -> Vec3 {
     if let Some(rec) = world.hit(r, 0.001..std::f32::MAX) {
         if depth >= MAX_DEPTH {
             return Vec3::new(0.0, 0.0, 0.0);
         }
 
         if let Some((attenuation, scattered)) = rec.material.scatter(r, &rec) {
-            return attenuation * color(&scattered, &world, depth + 1);
+            return attenuation * color(&scattered, world, depth + 1);
         }
 
         return Vec3::new(0.0, 0.0, 0.0);
@@ -27,11 +27,11 @@ fn color(r: &Ray, world: &[impl Hittable], depth: usize) -> Vec3 {
     (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * Vec3::new(0.5, 0.7, 1.0)
 }
 
-trait AsColor {
+trait AsColorExt {
     fn as_color(self) -> u32;
 }
 
-impl AsColor for Vec3 {
+impl AsColorExt for Vec3 {
     fn as_color(mut self) -> u32 {
         self = self * 255.99;
         u32::from_le_bytes([self.z as u8, self.y as u8, self.x as u8, 0])
@@ -51,7 +51,7 @@ pub struct RenderOpts {
 /// Main raytracer render method
 pub fn trace_some_rays(
     buffer: &mut Vec<u32>,
-    world: &[impl Hittable],
+    world: &impl Hittable,
     camera: Camera,
     opts: RenderOpts,
 ) {
@@ -71,7 +71,7 @@ pub fn trace_some_rays(
 
                     let r = camera.get_ray(u, v);
 
-                    col + color(&r, &world, 0)
+                    col + color(&r, world, 0)
                 }) / opts.samples as f32;
 
                 let avg_color =
