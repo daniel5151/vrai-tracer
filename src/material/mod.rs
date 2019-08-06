@@ -10,7 +10,7 @@ pub use dielectric::Dielectric;
 pub use lambertian::Lambertian;
 pub use metal::Metal;
 
-pub trait Material: Sync + std::fmt::Debug {
+pub trait Material: Send + Sync + std::fmt::Debug {
     /// Given a incoming [Ray] and a [HitRecord], returns None if the Ray is
     /// absorbed, or Some((Attentuation, Scattered Ray))
     fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)>;

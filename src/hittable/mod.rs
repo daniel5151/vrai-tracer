@@ -30,19 +30,38 @@ pub trait Hittable: Sync {
     fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord>;
 }
 
-impl Hittable for &dyn Hittable {
+macro_rules! impl_dyn {
+    ($type:ty) => {
+        impl Hittable for $type {
+            fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord> {
+                (**self).hit(r, t_range)
+            }
+        }
+    };
+}
+
+impl_dyn!(Box<dyn Hittable>);
+impl_dyn!(&dyn Hittable);
+impl_dyn!(&mut dyn Hittable);
+
+impl<H: Hittable> Hittable for &[H] {
+    /// Returns the HitRecord of the closest hittable object
     fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord> {
-        (**self).hit(r, t_range)
+        let mut temp_rec = None;
+        let mut closest_so_far = t_range.end;
+
+        for hittable in self.iter() {
+            if let Some(rec) = hittable.hit(r, t_range.start..closest_so_far) {
+                closest_so_far = rec.t;
+                temp_rec = Some(rec);
+            }
+        }
+
+        temp_rec
     }
 }
 
-impl Hittable for &mut dyn Hittable {
-    fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord> {
-        (**self).hit(r, t_range)
-    }
-}
-
-impl<T: Hittable> Hittable for &[T] {
+impl<H: Hittable> Hittable for Vec<H> {
     /// Returns the HitRecord of the closest hittable object
     fn hit(&self, r: &Ray, t_range: Range<f32>) -> Option<HitRecord> {
         let mut temp_rec = None;

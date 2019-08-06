@@ -1,4 +1,4 @@
-use crate::camera::CameraOpts;
+use crate::camera::{Camera, CameraOpts};
 use crate::hittable::Sphere;
 use crate::material;
 use crate::vec3::Vec3;
@@ -7,6 +7,7 @@ use super::Scene;
 
 /// The Scene that was gradually expanded upon throughout RTIOW.
 pub struct Chapter {
+    camera: Camera,
     spheres: Vec<Sphere>,
 }
 
@@ -46,29 +47,39 @@ impl Chapter {
                 Box::new(material::Dielectric::new(1.5)),
             ),
         ];
-        Chapter { spheres }
-    }
-}
 
-impl Scene<Sphere> for Chapter {
-    fn init_camopts(&self) -> CameraOpts {
         let look_from = Vec3::new(3.0, 3., 2.);
         let look_at = Vec3::new(0., 0., -1.);
 
-        CameraOpts {
-            origin: look_from,
-            direction: (look_from - look_at).normalize(),
-            vup: Vec3::new(0., 1., 0.),
-            hfov: 45.0,
-            aspect: 9999., // dummy value, should depend on output medium
-            aperture: 2.0,
-            focus_dist: (look_from - look_at).length(),
+        Chapter {
+            camera: Camera::new(CameraOpts {
+                origin: look_from,
+                direction: (look_from - look_at).normalize(),
+                vup: Vec3::new(0., 1., 0.),
+                hfov: 45.0,
+                aspect: 9999., // dummy value, should depend on output medium
+                aperture: 2.0,
+                focus_dist: (look_from - look_at).length(),
+            }),
+            spheres,
         }
     }
+}
+
+impl Scene for Chapter {
+    type World = Vec<Sphere>;
 
     fn get_world(&self) -> &Vec<Sphere> {
         &self.spheres
     }
+
+    fn get_camera(&self) -> &Camera {
+        &self.camera
+    }
+    fn enable_freecam(&mut self, camera: Camera) {
+        self.camera = camera;
+    }
+    fn disable_freecam(&mut self) {}
 
     fn animate(&mut self, time: std::time::Duration) {
         self.spheres.get_mut(0).map(|s| {

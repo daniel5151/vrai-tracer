@@ -25,3 +25,36 @@ pub fn rand_in_unit_circle() -> Vec3 {
         }
     }
 }
+
+const AVG_SIZE: usize = 1;
+
+pub struct SmoothAvg {
+    i: usize,
+    e: [f32; AVG_SIZE],
+}
+
+impl SmoothAvg {
+    pub fn new() -> SmoothAvg {
+        SmoothAvg {
+            i: 0,
+            e: [0.; AVG_SIZE],
+        }
+    }
+
+    pub fn update(&mut self, v: f32) {
+        if !v.is_normal() {
+            // INF, -INF, or zero
+            return;
+        }
+        self.e[self.i] = v;
+        self.i = (self.i + 1) % AVG_SIZE;
+    }
+
+    pub fn get(&self) -> f32 {
+        self.e
+            .iter()
+            .filter(|x| **x > 0.00001)
+            .fold(0., |a, x| a + x)
+            / AVG_SIZE as f32
+    }
+}

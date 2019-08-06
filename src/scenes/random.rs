@@ -1,7 +1,7 @@
 //! Random scene from Chapter 12 of RTIOW
 use rand::{thread_rng, Rng};
 
-use crate::camera::CameraOpts;
+use crate::camera::{Camera, CameraOpts};
 use crate::hittable::Sphere;
 use crate::material;
 use crate::vec3::Vec3;
@@ -10,6 +10,7 @@ use super::Scene;
 
 /// The Scene that was gradually expanded upon throughout RTIOW.
 pub struct Random {
+    camera: Camera,
     scene: Vec<Sphere>,
 }
 
@@ -71,25 +72,34 @@ impl Random {
             Box::new(material::Metal::new(Vec3::new(0.7, 0.6, 0.5), 0.0)),
         ));
 
-        Random { scene }
-    }
-}
-
-impl Scene<Sphere> for Random {
-    fn init_camopts(&self) -> CameraOpts {
         let look_from = Vec3::new(13.0, 2.0, 3.0);
         let look_at = Vec3::new(0.0, 0.0, 0.0);
 
-        CameraOpts {
-            origin: look_from,
-            direction: (look_from - look_at).normalize(),
-            vup: Vec3::new(0., 1., 0.),
-            hfov: 40.0,
-            aspect: 9999., // dummy value, should depend on output medium
-            aperture: 0.25,
-            focus_dist: 10.,
+        Random {
+            camera: Camera::new(CameraOpts {
+                origin: look_from,
+                direction: (look_from - look_at).normalize(),
+                vup: Vec3::new(0., 1., 0.),
+                hfov: 40.0,
+                aspect: 9999., // dummy value, should depend on output medium
+                aperture: 0.25,
+                focus_dist: 10.,
+            }),
+            scene,
         }
     }
+}
+
+impl Scene for Random {
+    type World = Vec<Sphere>;
+
+    fn get_camera(&self) -> &Camera {
+        &self.camera
+    }
+    fn enable_freecam(&mut self, camera: Camera) {
+        self.camera = camera;
+    }
+    fn disable_freecam(&mut self) {}
 
     fn get_world(&self) -> &Vec<Sphere> {
         &self.scene

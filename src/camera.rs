@@ -18,6 +18,7 @@ pub struct CameraOpts {
 
 #[derive(Debug)]
 pub struct Camera {
+    opts: CameraOpts,
     lower_left_corner: Vec3,
     horizontal: Vec3,
     vertical: Vec3,
@@ -51,6 +52,7 @@ impl Camera {
         let v = w.cross(&u);
 
         Camera {
+            opts,
             lower_left_corner: origin - focus_dist * (half_width * u + half_height * v + w),
             horizontal: 2. * half_width * focus_dist * u,
             vertical: 2. * half_height * focus_dist * v,
@@ -73,5 +75,10 @@ impl Camera {
             origin,
             self.lower_left_corner + du * self.horizontal + dv * self.vertical - origin,
         )
+    }
+
+    /// Get original construction parameters
+    pub fn opts(&self) -> CameraOpts {
+        self.opts
     }
 }
