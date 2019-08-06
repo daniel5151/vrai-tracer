@@ -14,6 +14,12 @@ pub struct Random {
     scene: Vec<Sphere>,
 }
 
+impl Default for Random {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Random {
     /// Create a new Random scene
     // TODO?: add parameter to stage the scene as it appeared at chapter X?

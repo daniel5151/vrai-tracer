@@ -1,3 +1,5 @@
+#![allow(clippy::many_single_char_names)] // lots of math uses single char names
+
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
@@ -39,7 +41,7 @@ fn main() -> Result<(), minifb::Error> {
     let (base_width, base_height) = match args.get(2) {
         Some(s) => {
             let res = s
-                .split("x")
+                .split('x')
                 .map(|s| s.parse::<usize>().expect("bad resolution"))
                 .collect::<Vec<_>>();
             (res[0], res[1])
@@ -127,8 +129,8 @@ fn main() -> Result<(), minifb::Error> {
             current_frame = render::trace_some_rays_nonblocking(
                 &scene,
                 render::RenderOpts {
-                    width: width,
-                    height: height,
+                    width,
+                    height,
                     samples: opts.samples,
                 },
             );
@@ -139,7 +141,7 @@ fn main() -> Result<(), minifb::Error> {
         window.update_with_buffer(&buffer)?;
 
         // Check for various live options
-        window.get_keys_pressed(minifb::KeyRepeat::Yes).map(|keys| {
+        if let Some(keys) = window.get_keys_pressed(minifb::KeyRepeat::Yes) {
             for key in keys {
                 let mut opts_updated = true;
                 match key {
@@ -163,10 +165,12 @@ fn main() -> Result<(), minifb::Error> {
                     current_frame.invalidate();
                 }
             }
-        });
-        window.get_keys().map(|keys| {
+        };
+
+        if let Some(keys) = window.get_keys() {
             opts.freeze = false;
             for key in keys {
+                #[allow(clippy::single_match)]
                 match key {
                     Key::F => {
                         opts.freeze = true;
@@ -175,7 +179,7 @@ fn main() -> Result<(), minifb::Error> {
                     _ => {}
                 }
             }
-        });
+        };
     }
 
     Ok(())

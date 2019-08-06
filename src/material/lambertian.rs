@@ -25,6 +25,6 @@ impl Material for Lambertian {
         let target = rec.p + rec.normal + rand_in_unit_sphere();
         let scattered = Ray::new(rec.p, target - rec.p);
         let attenuation = self.albedo;
-        return Some((attenuation, scattered));
+        Some((attenuation, scattered))
     }
 }

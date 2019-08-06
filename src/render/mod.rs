@@ -46,7 +46,7 @@ trait AsColorExt {
 
 impl AsColorExt for Vec3 {
     fn as_color(mut self) -> u32 {
-        self = self * 255.99;
+        self *= 255.99;
         u32::from_le_bytes([self.z as u8, self.y as u8, self.x as u8, 0])
     }
 }

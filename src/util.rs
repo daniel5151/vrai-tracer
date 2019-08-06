@@ -28,6 +28,7 @@ pub fn rand_in_unit_circle() -> Vec3 {
 
 const AVG_SIZE: usize = 1;
 
+#[derive(Default)]
 pub struct SmoothAvg {
     i: usize,
     e: [f32; AVG_SIZE],

@@ -11,6 +11,12 @@ pub struct Chapter {
     spheres: Vec<Sphere>,
 }
 
+impl Default for Chapter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Chapter {
     /// Create a new Chapter scene
     // TODO?: add parameter to stage the scene as it appeared at chapter X?
@@ -82,8 +88,8 @@ impl Scene for Chapter {
     fn disable_freecam(&mut self) {}
 
     fn animate(&mut self, time: std::time::Duration) {
-        self.spheres.get_mut(0).map(|s| {
+        if let Some(s) = self.spheres.get_mut(0) {
             s.center.x = (time.as_millis() as f32 / 1000.).sin();
-        });
+        }
     }
 }

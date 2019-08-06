@@ -56,7 +56,7 @@ impl Material for Dielectric {
             outward_normal = rec.normal;
             ni_over_nt = 1.0 / self.ref_idx;
             cosine = -r_in.direction.dot(&rec.normal) / r_in.direction.length();
-        }
+        };
 
         let scattered = match refract(&r_in.direction, &outward_normal, ni_over_nt) {
             Some(refracted) => {
@@ -71,6 +71,6 @@ impl Material for Dielectric {
         };
 
         let attenuation = Vec3::new(1., 1., 1.); // doesn't absorb anything
-        return Some((attenuation, scattered));
+        Some((attenuation, scattered))
     }
 }
