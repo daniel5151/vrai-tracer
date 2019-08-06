@@ -97,12 +97,8 @@ fn main() -> Result<(), minifb::Error> {
             current_frame.invalidate();
         }
 
-        if current_frame.is_done() && !opts.freeze {
+        if current_frame.poll_done() && !opts.freeze {
             // kick off another frame!
-
-            // TODO: find out why flushing to buffer at the end of a frame
-            // doesn't work...
-            // current_frame.flush_to_buffer(&mut buffer);
 
             // Update frame-rate counter
             fups.update(1000. / last_frame.elapsed().as_millis() as f32);

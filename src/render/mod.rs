@@ -1,3 +1,5 @@
+use rand::Rng;
+
 mod blocking;
 mod nonblocking;
 
@@ -6,6 +8,7 @@ pub use nonblocking::{trace_some_rays_nonblocking, RenderProgress};
 
 use crate::hittable::Hittable;
 use crate::ray::Ray;
+use crate::scenes::Scene;
 use crate::vec3::Vec3;
 
 /// Container for various render options
@@ -21,6 +24,7 @@ pub struct RenderOpts {
 
 const MAX_DEPTH: usize = 50;
 
+/// Core ray-tracing method.
 fn color(r: &Ray, world: &impl Hittable, depth: usize) -> Vec3 {
     if let Some(rec) = world.hit(r, 0.001..std::f32::MAX) {
         if depth >= MAX_DEPTH {
@@ -40,6 +44,34 @@ fn color(r: &Ray, world: &impl Hittable, depth: usize) -> Vec3 {
     (1.0 - t) * Vec3::new(1.0, 1.0, 1.0) + t * Vec3::new(0.5, 0.7, 1.0)
 }
 
+/// Core per-pixel render method.
+/// Shared between various buffer drivers.
+#[inline]
+fn render_pixel(
+    rng: &mut impl Rng,
+    x: usize,
+    y: usize,
+    opts: &RenderOpts,
+    scene: &impl Scene,
+) -> u32 {
+    let y = (opts.height - y) as f32;
+    let x = x as f32;
+
+    let avg_color = (0..opts.samples).fold(Vec3::new(0.0, 0.0, 0.0), |col, _| {
+        let u = (x + rng.gen::<f32>()) / opts.width as f32;
+        let v = (y + rng.gen::<f32>()) / opts.height as f32;
+
+        let r = scene.get_camera().get_ray(u, v);
+
+        col + color(&r, scene.get_world(), 0)
+    }) / opts.samples as f32;
+
+    let avg_color = Vec3::new(avg_color.x.sqrt(), avg_color.y.sqrt(), avg_color.z.sqrt());
+
+    avg_color.as_color()
+}
+
+/// Extension trait for returning self as a u32 RGBA value.
 trait AsColorExt {
     fn as_color(self) -> u32;
 }
