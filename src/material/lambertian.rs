@@ -3,7 +3,7 @@ use crate::ray::Ray;
 use crate::util::rand_in_unit_sphere;
 use crate::vec3::Vec3;
 
-use super::Material;
+use super::{Material, MaterialT};
 
 /// Material that scatters incoming rays in random directions.
 #[derive(Debug)]
@@ -13,8 +13,8 @@ pub struct Lambertian {
 
 impl Lambertian {
     /// Return a new Lambertian material
-    pub fn new(albedo: Vec3) -> Lambertian {
-        Lambertian { albedo }
+    pub fn new_material(albedo: Vec3) -> MaterialT {
+        Lambertian { albedo }.into()
     }
 }
 

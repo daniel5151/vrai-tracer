@@ -7,6 +7,7 @@ pub use blocking::trace_some_rays_blocking;
 pub use nonblocking::{trace_some_rays_nonblocking, RenderProgress};
 
 use crate::hittable::Hittable;
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::scenes::Scene;
 use crate::vec3::Vec3;

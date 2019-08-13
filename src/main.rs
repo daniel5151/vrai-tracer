@@ -32,6 +32,12 @@ struct Opts {
 }
 
 fn main() -> Result<(), minifb::Error> {
+    #[cfg(feature = "enum_dispatch")]
+    println!("using enum dispatch");
+
+    #[cfg(not(feature = "enum_dispatch"))]
+    println!("using dynamic dispatch");
+
     let args: Vec<String> = std::env::args().collect();
     let samples = match args.get(1) {
         Some(s) => s.parse().expect("bad number of samples"),

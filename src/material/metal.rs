@@ -3,7 +3,7 @@ use crate::ray::Ray;
 use crate::util::rand_in_unit_sphere;
 use crate::vec3::Vec3;
 
-use super::Material;
+use super::{Material, MaterialT};
 
 /// Material that reflects incoming rays through the hit-point's normal
 #[derive(Debug)]
@@ -14,8 +14,8 @@ pub struct Metal {
 
 impl Metal {
     /// Return a new Metal material
-    pub fn new(albedo: Vec3, fuzz: f32) -> Metal {
-        Metal { albedo, fuzz }
+    pub fn new_material(albedo: Vec3, fuzz: f32) -> MaterialT {
+        Metal { albedo, fuzz }.into()
     }
 }
 

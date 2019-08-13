@@ -4,7 +4,7 @@ use crate::hittable::HitRecord;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 
-use super::Material;
+use super::{Material, MaterialT};
 
 /// Material that scatters incoming rays in random directions.
 #[derive(Debug)]
@@ -15,8 +15,8 @@ pub struct Dielectric {
 
 impl Dielectric {
     /// Return a new Dielectric material, given it's Refractive Index
-    pub fn new(ref_idx: f32) -> Dielectric {
-        Dielectric { ref_idx }
+    pub fn new_material(ref_idx: f32) -> MaterialT {
+        Dielectric { ref_idx }.into()
     }
 }
 

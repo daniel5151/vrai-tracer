@@ -1,27 +1,28 @@
 use std::ops::Range;
 
-use crate::material::Material;
+use crate::material::MaterialT;
 use crate::ray::Ray;
 use crate::vec3::Vec3;
 
-use super::{HitRecord, Hittable};
+use super::{HitRecord, Hittable, HittableT};
 
 /// A Sphere. You know what a Sphere is, right?
 #[derive(Debug)]
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,
-    pub material: Box<dyn Material>,
+    pub material: MaterialT,
 }
 
 impl Sphere {
     /// Create a new sphere with a specified `center` and `radius`
-    pub fn new(center: Vec3, radius: f32, material: Box<dyn Material>) -> Sphere {
+    pub fn new_hittable(center: Vec3, radius: f32, material: MaterialT) -> HittableT {
         Sphere {
             center,
             radius,
             material,
         }
+        .into()
     }
 }
 
@@ -41,7 +42,7 @@ impl Hittable for Sphere {
                         let t = root;
                         let p = r.point_at_param(t);
                         let normal = (p - self.center) / self.radius;
-                        return Some(HitRecord{ t, p, normal, material: &*self.material });
+                        return Some(HitRecord{ t, p, normal, material: &self.material });
                     }
                 };
             }

@@ -12,16 +12,30 @@ I also plan to use this project as a testbed for implementing and profiling
 various programming paradigms and techniques in Rust. For example:
 - Exploring dynamic dispatch vs. enum-based static dispatch with respect to
   performance, resource usage, and programming ergonomics.
-- Various ways to multi-thread the raytracer.
+- Various ways to multithread the raytracer.
 - SIMD?
 
 ## Highlights
 
+### Dynamic vs. Static dispatch... In one codebase?!
+
+Thanks to Rust's powerful Trait system, robust generics, and rich macros,
+this codebase can switch between Dynamic and Static dispatch by toggling a
+single feature flag! Enabling the `enum_dispatch` feature switches the entire
+project from Trait Object based dynamic dispatch, to enum based static dispatch!
+
+And no, the codebase is _not_ a mess of `#[cfg(feature = "enum_dispatch")]`
+declarations :smile:. The bulk of the conditionally compiled code lives in
+`src/hittable/mod.rs` and `src/material/mod.rs`, while the rest of the codebase
+uses types exported from those modules, unaware of the specific dispatch type.
+
 ### Non-blocking Rendering
 
-Check out `src/render/nonblocking.rs`.
+The non-blocking renderer enables previewing the final image as it renders.
 
-TODO: explain this some more :P
+This is surprisingly tricky to get right, thanks to Rust's borrow checker.
+
+Check out `src/render/nonblocking.rs`.
 
 ## Usage
 
