@@ -1,15 +1,11 @@
-# Ray Tracing in One Weekend
+# vrai-tracer
 
-Following along with [Ray Tracing in One Weekend](https://github.com/RayTracing/raytracinginoneweekend) in Rust.
+_AKA:_ "true-tracer" (in French)
 
-I've opted to render directly onto a live framebuffer (courtesy of the great
-`minifb` crate). This is neat, since it allows for cool things such as live
-tweaking of render parameters, scene animation, and visualizing the render
-progress by sending pixels to the buffer as they're completed. I'll be adding
-static image output at some point as well.
+My attempt at following along with [Ray Tracing in One Weekend](https://github.com/RayTracing/raytracinginoneweekend) in Rust.
 
-I also plan to use this project as a testbed for implementing and profiling
-various programming paradigms and techniques in Rust. For example:
+I plan to use this project as a testbed for implementing and profiling various 
+programming paradigms and techniques in Rust. For example:
 - Exploring dynamic dispatch vs. enum-based static dispatch with respect to
   performance, resource usage, and programming ergonomics.
 - Various ways to multithread the raytracer.
@@ -17,7 +13,7 @@ various programming paradigms and techniques in Rust. For example:
 
 ## Highlights
 
-### Dynamic vs. Static dispatch... In one codebase?!
+### Dynamic and Static dispatch... In one codebase?!
 
 Thanks to Rust's powerful Trait system, robust generics, and rich macros,
 this codebase can switch between Dynamic and Static dispatch by toggling a
@@ -29,13 +25,21 @@ declarations :smile:. The bulk of the conditionally compiled code lives in
 `src/hittable/mod.rs` and `src/material/mod.rs`, while the rest of the codebase
 uses types exported from those modules, unaware of the specific dispatch type.
 
-### Non-blocking Rendering
+### Live preview
 
-The non-blocking renderer enables previewing the final image as it renders.
+I've opted to render directly onto a live framebuffer (courtesy of the great
+`minifb` crate). This is neat, since it allows for cool things such as live
+tweaking of render parameters, scene animation, and visualizing the render
+progress by sending pixels to the buffer as they're completed. I'll be adding
+static image output at some point as well.
 
-This is surprisingly tricky to get right, thanks to Rust's borrow checker.
+#### With non-blocking rendering!
 
-Check out `src/render/nonblocking.rs`.
+This is surprisingly tricky to get right in Rust, what with the borrow checker
+not letting me just share a buffer between threads easily.
+
+Check out `src/render/nonblocking.rs` for how I pulled it off.
+_Spoiler alert: lots of channels!_ 
 
 ## Usage
 

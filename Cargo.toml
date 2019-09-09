@@ -1,5 +1,5 @@
 [package]
-name = "ray-tracing-in-1-weekend"
+name = "vrai-tracer"
 version = "0.1.0"
 authors = ["Daniel Prilik <danielprilik@gmail.com>"]
 edition = "2018"

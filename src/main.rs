@@ -21,7 +21,7 @@ const BASE_WIDTH: usize = 256;
 const BASE_HEIGHT: usize = 128;
 const DEFAULT_SAMPLES: usize = 4; // speedy, but grainy
 
-const TITLE: &str = "Ray Tacing in 1 Weekend";
+const TITLE: &str = "vrai-tracer";
 
 #[derive(Debug)]
 struct Opts {
