@@ -11,6 +11,8 @@ programming paradigms and techniques in Rust. For example:
 - Various ways to multithread the raytracer.
 - SIMD?
 
+![20 samples / pixel](vrai-tracer.png)
+
 ## Highlights
 
 ### Dynamic and Static dispatch... In one codebase?!
